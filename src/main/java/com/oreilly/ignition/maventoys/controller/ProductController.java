@@ -1,11 +1,13 @@
 package com.oreilly.ignition.maventoys.controller;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.oreilly.ignition.maventoys.entity.Inventory;
 import com.oreilly.ignition.maventoys.entity.Product;
+import com.oreilly.ignition.maventoys.entity.Sale;
 import com.oreilly.ignition.maventoys.service.ProductService;
+import com.oreilly.ignition.maventoys.service.SaleService;
 import com.oreilly.ignition.maventoys.service.InventoryService;
 
 @RestController
@@ -30,6 +34,8 @@ public class ProductController {
     private ProductService productService;
     @Autowired
     private InventoryService inventoryService;
+    @Autowired
+    private SaleService saleService;
 
     @GetMapping
     @CrossOrigin
@@ -43,8 +49,10 @@ public class ProductController {
 
     @GetMapping("/{productId}")
     @CrossOrigin
-    public Product findById(@PathVariable("productId") Integer productId) {
-        return productService.findById(productId).orElse(null);
+    public ResponseEntity<Product> findById(@PathVariable("productId") Integer productId) {
+        return productService.findById(productId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -95,32 +103,54 @@ public class ProductController {
 
     @GetMapping("/{productId}/inventory")
     @CrossOrigin
-    public HashMap<Object, Object> getInventory(@PathVariable("productId") Integer productId) {
+    public ResponseEntity<HashMap<Object, Object>> getInventory(@PathVariable("productId") Integer productId) {
         Optional<Product> productOptional = productService.findById(productId);
         if (productOptional.isPresent()) {
             Product product = productOptional.get();
-            List<Inventory> response = inventoryService.findByProductId(productId).stream().toList();
-            String color = "\u001B[40m";
-            System.out.println(color + response);
-            return new HashMap<>() {
+            List<Inventory> inventories = inventoryService.findByProductId(product.getId());
+            HashMap<Object, Object> inventoryPerProduct = new HashMap<>() {
                 {
-                    put("product", new HashMap<>() {
+                    put("product", product);
+                    put("totalStock", inventories.stream().mapToInt(Inventory::getStockOnHand).sum());
+                    put("inventory", new ArrayList<>() {
                         {
-                            put("id", product.getId());
-                            put("name", product.getName());
-                            put("cost", product.getCost());
-                            put("price", product.getPrice());
-                            put("category", product.getCategory());
-                            put("active", product.getActive());
-                            put("creationDate", product.getCreationDate());
+                            for (Inventory inventory : inventories) {
+                                add(new HashMap<>() {
+                                    {
+                                        put("id", inventory.getId());
+                                        put("stockOnHand", inventory.getStockOnHand());
+                                    }
+                                });
+                            }
                         }
                     });
-                    put("inventory", inventoryService.findByProductId(productId).stream().toList());
-                    //put("inventory", inventoryService.findByProductId(productId).stream().toList());
                 }
             };
+            return ResponseEntity.ok(inventoryPerProduct);
         } else {
-            return null;
+            return ResponseEntity.notFound().build();
         }
     }
+    
+    @GetMapping("/{productId}/sales")
+    @CrossOrigin
+    public ResponseEntity<HashMap<Object, Object>> getSales(@PathVariable("productId") Integer productId) {
+        Optional<Product> productOptional = productService.findById(productId);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            List<Sale> sales = saleService.findByProductId(product.getId());
+            HashMap<Object, Object> inventoryPerProduct = new HashMap<>() {
+                {
+                    put("product", product);
+                    put("timesSold", sales.size());
+                    put("totalEarn", sales.stream().mapToDouble(Sale::getTotal).sum());
+                    put("sales", sales);
+                }
+            };
+            return ResponseEntity.ok(inventoryPerProduct);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }
