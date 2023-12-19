@@ -131,7 +131,7 @@ public class ProductController {
             return ResponseEntity.notFound().build();
         }
     }
-    
+
     @GetMapping("/{productId}/sales")
     @CrossOrigin
     public ResponseEntity<HashMap<Object, Object>> getSales(@PathVariable("productId") Integer productId) {
@@ -142,8 +142,6 @@ public class ProductController {
             HashMap<Object, Object> inventoryPerProduct = new HashMap<>() {
                 {
                     put("product", product);
-                    put("timesSold", sales.size());
-                    put("totalEarn", sales.stream().mapToDouble(Sale::getTotal).sum());
                     put("sales", sales);
                 }
             };
@@ -153,4 +151,10 @@ public class ProductController {
         }
     }
 
+    @GetMapping("/best-sellers")
+    @CrossOrigin
+    public ResponseEntity<List<Product>> getBestSellers() {
+        //System.out.println(saleService.findTotalQuantitySoldForEachProduct());
+        return null;
+    }
 }

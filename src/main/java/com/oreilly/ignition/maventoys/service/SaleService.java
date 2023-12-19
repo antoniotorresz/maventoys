@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.oreilly.ignition.maventoys.dto.ProductSales;
 import com.oreilly.ignition.maventoys.entity.Sale;
 import com.oreilly.ignition.maventoys.repository.SaleRepository;
 
@@ -31,6 +32,10 @@ public class SaleService {
     }
 
     public List<Sale> findByProductId(Integer productId) {
-        return saleRepository.findByProductId(productId);
+        return saleRepository.findAllSalesWithInvoicesAndProducts(productId);
+    }
+
+    public List<ProductSales> findTotalQuantitySoldForEachProduct() {
+        return null;
     }
 }

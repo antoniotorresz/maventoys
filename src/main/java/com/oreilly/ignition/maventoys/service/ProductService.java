@@ -34,4 +34,9 @@ public class ProductService {
         return productRepository.findAll()
                 .stream().filter(p -> p.getActive() == active).toList();
     }
+
+    public List<Product> getBestSellers() {
+        return productRepository.findAll()
+                .stream().sorted((p1, p2) -> p2.getSales().size() - p1.getSales().size()).toList();
+    }
 }
