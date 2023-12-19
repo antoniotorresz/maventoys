@@ -69,8 +69,16 @@ public class ProductController {
 
     @DeleteMapping("/{productId}")
     @CrossOrigin
-    public void deleteById(@PathVariable("productId") Integer productId) {
-        productService.deleteById(productId);
+    public ResponseEntity<Product> deleteById(@PathVariable("productId") Integer productId) {
+        Optional<Product> productOptional = productService.findById(productId);
+        if (productOptional.isPresent()) {
+            //we are doing logical delete, so we are just setting the active flag to 0
+            Product product = productOptional.get();
+            product.setActive(0);
+            return ResponseEntity.ok(productService.save(product));
+        }else {
+            return ResponseEntity.status(404).build();
+        }
     }
 
     @PutMapping("/{productId}")
@@ -153,8 +161,25 @@ public class ProductController {
 
     @GetMapping("/best-sellers")
     @CrossOrigin
-    public ResponseEntity<List<Product>> getBestSellers() {
-        //System.out.println(saleService.findTotalQuantitySoldForEachProduct());
-        return null;
+    public ResponseEntity<HashMap<Object, Object>> getBestSellers() {
+        List<Object[]> topSold = saleService.findMostSoldProducts();
+        HashMap<Object, Object> bestSellers = new HashMap<>() {
+            {
+                put("bestSellers", new ArrayList<>() {
+                    {
+                        for (Object[] productQuantity : topSold) {
+                            add(new HashMap<>() {
+                                {
+                                    put("product", productService.findById((Integer) productQuantity[0]).get());
+                                    put("quantity", productQuantity[1]);
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        };
+
+        return ResponseEntity.ok(bestSellers);
     }
 }

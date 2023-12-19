@@ -35,7 +35,7 @@ public class SaleService {
         return saleRepository.findAllSalesWithInvoicesAndProducts(productId);
     }
 
-    public List<ProductSales> findTotalQuantitySoldForEachProduct() {
-        return null;
+    public List<Object[]> findMostSoldProducts() {
+        return saleRepository.findMostSoldProducts();
     }
 }
