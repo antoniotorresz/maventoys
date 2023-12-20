@@ -39,4 +39,15 @@ public class ProductService {
         return productRepository.findAll()
                 .stream().sorted((p1, p2) -> p2.getSales().size() - p1.getSales().size()).toList();
     }
+
+    public List<Product> getBestSellers(List<Product> products) {
+        for (Product product : products) {
+            this.save(product);
+        }
+        return products;
+    }
+
+    public void updatePriceAndCost(Integer productId, Double price, Double cost) {
+        productRepository.updatePriceAndCost(productId, price, cost);
+    }
 }

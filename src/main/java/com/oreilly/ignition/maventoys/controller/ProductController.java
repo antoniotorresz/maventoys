@@ -1,12 +1,27 @@
 package com.oreilly.ignition.maventoys.controller;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.DoubleToLongFunction;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import java.nio.file.Path;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.oreilly.ignition.maventoys.entity.Inventory;
 import com.oreilly.ignition.maventoys.entity.Product;
@@ -72,11 +88,11 @@ public class ProductController {
     public ResponseEntity<Product> deleteById(@PathVariable("productId") Integer productId) {
         Optional<Product> productOptional = productService.findById(productId);
         if (productOptional.isPresent()) {
-            //we are doing logical delete, so we are just setting the active flag to 0
+            // we are doing logical delete, so we are just setting the active flag to 0
             Product product = productOptional.get();
             product.setActive(0);
             return ResponseEntity.ok(productService.save(product));
-        }else {
+        } else {
             return ResponseEntity.status(404).build();
         }
     }
@@ -181,5 +197,25 @@ public class ProductController {
         };
 
         return ResponseEntity.ok(bestSellers);
+    }
+
+    @CrossOrigin
+    @PutMapping()
+    public ResponseEntity<Object> bulkCostPriceUpdate(@RequestParam("csvFile") MultipartFile csvFile)
+            throws FileNotFoundException, IOException {
+        LocalDateTime currentTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH_mm_ss");
+        String pathToSave = "src/main/resources/static/bulk_updates/product_bulk_" + currentTime.format(formatter)
+                + ".csv";
+        Files.write(Paths.get(pathToSave), csvFile.getBytes());
+        try (FileReader fileReader = new FileReader(pathToSave);
+                CSVParser csvParser = CSVFormat.DEFAULT.withHeader().parse(fileReader)) {
+
+            for (CSVRecord row : csvParser) {
+                productService.updatePriceAndCost(Integer.parseInt(row.get("id")),
+                        Double.parseDouble(row.get("price")), Double.parseDouble(row.get("cost")));
+            }
+            return ResponseEntity.ok("Products updated successfully");
+        }
     }
 }
