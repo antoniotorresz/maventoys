@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.oreilly.ignition.maventoys.entity.Product;
@@ -49,5 +50,9 @@ public class ProductService {
 
     public void updatePriceAndCost(Integer productId, Double price, Double cost) {
         productRepository.updatePriceAndCost(productId, price, cost);
+    }
+
+    public List<Product> findAllPageable(Pageable pageable) {
+        return productRepository.findAll(pageable).toList();
     }
 }

@@ -18,6 +18,8 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -55,8 +57,12 @@ public class ProductController {
 
     @GetMapping
     @CrossOrigin
-    public List<Product> find(@RequestParam(value = "active", required = false) Boolean active) {
+    public Object find(@RequestParam(value = "active", required = false) Boolean active, @RequestParam(value = "page", defaultValue = "-1") int page, @RequestParam(value = "limit", defaultValue = "-1") int limit) {
         if (active == null) {
+            if (page > -1 && limit  > -1) {
+                Pageable pageable = PageRequest.of(page, limit);
+                return productService.findAllPageable(pageable);
+            }
             return productService.findAll();
         } else {
             return productService.findByActive(active ? 1 : 0);
