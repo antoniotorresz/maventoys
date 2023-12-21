@@ -1,7 +1,5 @@
 package com.oreilly.ignition.maventoys.controller;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -10,18 +8,16 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.DoubleToLongFunction;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
-import java.nio.file.Path;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,11 +32,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.oreilly.ignition.maventoys.entity.Category;
 import com.oreilly.ignition.maventoys.entity.Inventory;
 import com.oreilly.ignition.maventoys.entity.Product;
 import com.oreilly.ignition.maventoys.entity.Sale;
 import com.oreilly.ignition.maventoys.service.ProductService;
 import com.oreilly.ignition.maventoys.service.SaleService;
+import com.oreilly.ignition.maventoys.service.CategoryService;
 import com.oreilly.ignition.maventoys.service.InventoryService;
 
 @RestController
@@ -52,6 +50,8 @@ public class ProductController {
     private InventoryService inventoryService;
     @Autowired
     private SaleService saleService;
+    @Autowired
+    private CategoryService categoryService;
 
     @GetMapping
     @CrossOrigin
@@ -177,30 +177,57 @@ public class ProductController {
 
     @GetMapping("/best-sellers")
     @CrossOrigin
-    public ResponseEntity<HashMap<Object, Object>> getBestSellers() {
-        List<Object[]> topSold = saleService.findMostSoldProducts();
-        HashMap<Object, Object> bestSellers = new HashMap<>() {
-            {
-                put("bestSellers", new ArrayList<>() {
-                    {
-                        for (Object[] productQuantity : topSold) {
-                            add(new HashMap<>() {
-                                {
-                                    put("product", productService.findById((Integer) productQuantity[0]).get());
-                                    put("quantity", productQuantity[1]);
-                                }
-                            });
+    public ResponseEntity<HashMap<Object, Object>> getBestSellers(
+            @RequestParam(value = "category", required = false) String category) {
+        if (category == null) {
+            List<Object[]> topSold = saleService.findMostSoldProducts();
+            HashMap<Object, Object> bestSellers = new HashMap<>() {
+                {
+                    put("bestSellers", new ArrayList<>() {
+                        {
+                            for (Object[] productQuantity : topSold) {
+                                add(new HashMap<>() {
+                                    {
+                                        put("product", productService.findById((Integer) productQuantity[0]).get());
+                                        put("quantity", productQuantity[1]);
+                                    }
+                                });
+                            }
                         }
+                    });
+                }
+            };
+            return ResponseEntity.ok(bestSellers);
+        } else {
+            Category categoryOptional = categoryService.findByName(category);
+            if (categoryOptional != null) {
+                List<Object[]> topSold = saleService.findMostSoldProductsByCategory(categoryOptional.getId());
+                HashMap<Object, Object> bestSellers = new HashMap<>() {
+                    {
+                        put("bestSellers", new ArrayList<>() {
+                            {
+                                for (Object[] productQuantity : topSold) {
+                                    add(new HashMap<>() {
+                                        {
+                                            put("product", productService.findById((Integer) productQuantity[0]).get());
+                                            put("quantity", productQuantity[1]);
+                                        }
+                                    });
+                                }
+                            }
+                        });
                     }
-                });
-            }
-        };
+                };
 
-        return ResponseEntity.ok(bestSellers);
+                return ResponseEntity.ok(bestSellers);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        }
     }
 
     @CrossOrigin
-    @PutMapping()
+    @PutMapping
     public ResponseEntity<Object> bulkCostPriceUpdate(@RequestParam("csvFile") MultipartFile csvFile)
             throws FileNotFoundException, IOException {
         LocalDateTime currentTime = LocalDateTime.now();
@@ -208,14 +235,16 @@ public class ProductController {
         String pathToSave = "src/main/resources/static/bulk_updates/product_bulk_" + currentTime.format(formatter)
                 + ".csv";
         Files.write(Paths.get(pathToSave), csvFile.getBytes());
+        int count;
         try (FileReader fileReader = new FileReader(pathToSave);
                 CSVParser csvParser = CSVFormat.DEFAULT.withHeader().parse(fileReader)) {
-
+            count = csvParser.getRecords().size();
             for (CSVRecord row : csvParser) {
                 productService.updatePriceAndCost(Integer.parseInt(row.get("id")),
                         Double.parseDouble(row.get("price")), Double.parseDouble(row.get("cost")));
             }
-            return ResponseEntity.ok("Products updated successfully");
+            return ResponseEntity.ok(Collections.singletonMap("message", count + " products updated successfully"));
+            // return ResponseEntity.ok();
         }
     }
 }

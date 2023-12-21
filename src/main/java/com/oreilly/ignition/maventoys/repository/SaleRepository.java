@@ -19,4 +19,6 @@ public interface SaleRepository extends JpaRepository<Sale, Integer> {
     @Query(value = "SELECT i.product_id, sum(quantity) AS total_sold FROM invoices i INNER JOIN sales s ON i.sales_id = s.id GROUP BY i.product_id ORDER BY total_sold DESC LIMIT 5", nativeQuery = true)
     List<Object[]> findMostSoldProducts();
 
+    @Query(value = "SELECT i.product_id, sum(quantity) AS total_sold FROM invoices i INNER JOIN sales s ON i.sales_id = s.id INNER JOIN products p ON i.product_id = p.id WHERE p.category_id = :categoryId GROUP BY i.product_id ORDER BY total_sold DESC LIMIT 5", nativeQuery = true)
+    List<Object[]> findMostSoldProductsByCategory(@Param("categoryId") Integer categoryId);
 }

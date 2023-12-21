@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.oreilly.ignition.maventoys.dto.ProductSales;
 import com.oreilly.ignition.maventoys.entity.Sale;
 import com.oreilly.ignition.maventoys.repository.SaleRepository;
 
@@ -37,5 +36,9 @@ public class SaleService {
 
     public List<Object[]> findMostSoldProducts() {
         return saleRepository.findMostSoldProducts();
+    }
+
+    public List<Object[]> findMostSoldProductsByCategory(Integer id) {
+        return saleRepository.findMostSoldProductsByCategory(id);
     }
 }
