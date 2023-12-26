@@ -9,5 +9,4 @@ public class MaventoysApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(MaventoysApplication.class, args);
 	}
-
 }

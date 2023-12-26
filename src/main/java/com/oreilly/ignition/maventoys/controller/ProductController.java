@@ -57,17 +57,42 @@ public class ProductController {
 
     @GetMapping
     @CrossOrigin
-    public Object find(@RequestParam(value = "active", required = false) Boolean active, @RequestParam(value = "page", defaultValue = "-1") int page, @RequestParam(value = "limit", defaultValue = "-1") int limit) {
+    public Object find(@RequestParam(value = "active", required = false) Boolean active,
+            @RequestParam(value = "page", required = false, defaultValue = "-1") Integer page,
+            @RequestParam(value = "limit", required = false, defaultValue = "-1") Integer limit,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "category", required = false) String category) {
         if (active == null) {
-            if (page > -1 && limit  > -1) {
+            if (page > -1 && limit > 0) {
                 Pageable pageable = PageRequest.of(page, limit);
-                return productService.findAllPageable(pageable);
+                return productService.findAll(pageable);
             }
-            return productService.findAll();
+            return productService.findAll(null);
         } else {
-            return productService.findByActive(active ? 1 : 0);
+            return productService.findByActive(active ? 1 : 0, null);
         }
     }
+
+    // @GetMapping("/products")
+    // public Object find(@RequestParam(value = "name", required = false) String name,
+    //         @RequestParam(value = "category", required = false) String category,
+    //         @RequestParam(value = "active", required = false) Boolean active,
+    //         @RequestParam(value = "page", defaultValue = "0") int page,
+    //         @RequestParam(value = "limit", defaultValue = "10") int limit) {
+    //     Pageable pageable = PageRequest.of(page, limit);
+
+    //     if (active != null) {
+    //         return productService.findByActive(active ? 1 : 0, pageable);
+    //     } else if (name != null && category != null) {
+    //         return productService.findByNameAndCategory(name, category, pageable);
+    //     } else if (name != null) {
+    //         return productService.findByName(name, pageable);
+    //     } else if (category != null) {
+    //         return productService.findByCategory(category, pageable);
+    //     } else {
+    //         return productService.findAll(pageable);
+    //     }
+    // }
 
     @GetMapping("/{productId}")
     @CrossOrigin
@@ -242,15 +267,21 @@ public class ProductController {
                 + ".csv";
         Files.write(Paths.get(pathToSave), csvFile.getBytes());
         int count;
+        
         try (FileReader fileReader = new FileReader(pathToSave);
                 CSVParser csvParser = CSVFormat.DEFAULT.withHeader().parse(fileReader)) {
-            count = csvParser.getRecords().size();
-            for (CSVRecord row : csvParser) {
+            List<CSVRecord> records = csvParser.getRecords();
+            count = records.size();
+            for (CSVRecord row : records) {
+                System.out.println("Updating product " + row.get("id") + " to price " + row.get("price") + " and cost "
+                        + row.get("cost"));
                 productService.updatePriceAndCost(Integer.parseInt(row.get("id")),
                         Double.parseDouble(row.get("price")), Double.parseDouble(row.get("cost")));
             }
+            System.out.println("Finished updating " + count + " products");
             return ResponseEntity.ok(Collections.singletonMap("message", count + " products updated successfully"));
-            // return ResponseEntity.ok();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Error updating products"));
         }
     }
 }

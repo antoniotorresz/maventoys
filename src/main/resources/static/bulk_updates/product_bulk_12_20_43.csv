@@ -1,0 +1,4 @@
+"id","name","cost","price","category_id","creation_date","active"
+33,Teddy Bear,33,33.1,1,"2023-12-14 00:00:00",1
+34,Toy Robot,34,34.1,4,"2023-12-14 00:00:00",1
+36,Testing from API,12,12.99,4,"2023-12-15 10:30:04",1

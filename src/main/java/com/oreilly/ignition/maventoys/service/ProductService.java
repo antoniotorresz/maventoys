@@ -15,7 +15,10 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository;
 
-    public List<Product> findAll() {
+    public List<Product> findAll(Pageable pageable) {
+        if (pageable != null) {
+            return productRepository.findAll(pageable).toList();
+        }
         return productRepository.findAll();
     }
 
@@ -31,8 +34,12 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
-    public List<Product> findByActive(Integer active) {
-        return productRepository.findAll()
+    public List<Product> findByActive(Integer active, Pageable pageable) {
+        if (pageable == null) {
+            return productRepository.findAll()
+                .stream().filter(p -> p.getActive() == active).toList();
+        }
+        return productRepository.findAll(pageable)
                 .stream().filter(p -> p.getActive() == active).toList();
     }
 
@@ -49,10 +56,8 @@ public class ProductService {
     }
 
     public void updatePriceAndCost(Integer productId, Double price, Double cost) {
+        System.out.println("Updating price and cost for product " + productId + " to " + price + " and " + cost);
         productRepository.updatePriceAndCost(productId, price, cost);
     }
 
-    public List<Product> findAllPageable(Pageable pageable) {
-        return productRepository.findAll(pageable).toList();
-    }
 }

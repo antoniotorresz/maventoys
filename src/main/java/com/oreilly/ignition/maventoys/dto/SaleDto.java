@@ -1,13 +1,13 @@
 package com.oreilly.ignition.maventoys.dto;
 
-public class ProductSales {
+public class SaleDto {
     private Integer productId;
     private Integer totalSold;
 
-    public ProductSales() {
+    public SaleDto() {
     }
 
-    public ProductSales(Integer productId, Integer totalSold) {
+    public SaleDto(Integer productId, Integer totalSold) {
         this.productId = productId;
         this.totalSold = totalSold;
     }
