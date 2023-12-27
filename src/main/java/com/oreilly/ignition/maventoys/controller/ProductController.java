@@ -273,6 +273,7 @@ public class ProductController {
             List<CSVRecord> records = csvParser.getRecords();
             count = records.size();
             for (CSVRecord row : records) {
+                // Access each record's values using the header names
                 System.out.println("Updating product " + row.get("id") + " to price " + row.get("price") + " and cost "
                         + row.get("cost"));
                 productService.updatePriceAndCost(Integer.parseInt(row.get("id")),
