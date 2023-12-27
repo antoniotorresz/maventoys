@@ -69,7 +69,7 @@ public class ProductController {
             }
             return productService.findAll(null);
         } else {
-            return productService.findByActive(active ? 1 : 0, null);
+            return productService.findByActive(active ? true : false, null);
         }
     }
 
@@ -107,7 +107,7 @@ public class ProductController {
     public Product create(@RequestBody Product product) {
         if (product != null) {
             product.setCreationDate(new Date());
-            product.setActive(1);
+            product.setActive(true);
             return productService.save(product);
         } else {
             return null;
@@ -121,7 +121,7 @@ public class ProductController {
         if (productOptional.isPresent()) {
             // we are doing logical delete, so we are just setting the active flag to 0
             Product product = productOptional.get();
-            product.setActive(0);
+            product.setActive(false);
             return ResponseEntity.ok(productService.save(product));
         } else {
             return ResponseEntity.status(404).build();

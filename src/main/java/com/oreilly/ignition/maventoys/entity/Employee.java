@@ -31,13 +31,13 @@ public class Employee {
     @JoinColumn(name = "store_id")
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Store store;
-    private Integer active;
+    private Boolean active;
 
     public Employee() {
     }
 
     public Employee(Integer id, String firstName, String lastName, Date hireDate, String gender, Date birthDate,
-            Store store, Integer active) {
+            Store store, Boolean active) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -105,11 +105,11 @@ public class Employee {
         this.store = store;
     }
 
-    public Integer getActive() {
+    public Boolean getActive() {
         return this.active;
     }
 
-    public void setActive(Integer active) {
+    public void setActive(Boolean active) {
         this.active = active;
     }
     

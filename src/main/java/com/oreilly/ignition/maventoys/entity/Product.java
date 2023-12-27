@@ -33,7 +33,7 @@ public class Product {
     private Double cost;
     private Double price;
     private Date creationDate;
-    private Integer active;
+    private Boolean active;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
@@ -47,7 +47,7 @@ public class Product {
     public Product() {
     }
 
-    public Product(Integer id, String name, Double cost, Double price, Date creationDate, Integer active,
+    public Product(Integer id, String name, Double cost, Double price, Date creationDate, Boolean active,
             Category category) {
         this.id = id;
         this.name = name;
@@ -99,11 +99,11 @@ public class Product {
         this.creationDate = creationDate;
     }
 
-    public Integer getActive() {
+    public Boolean getActive() {
         return this.active;
     }
 
-    public void setActive(Integer active) {
+    public void setActive(Boolean active) {
         this.active = active;
     }
 

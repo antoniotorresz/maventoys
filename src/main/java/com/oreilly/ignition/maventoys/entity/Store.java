@@ -20,12 +20,12 @@ public class Store {
     private String city;
     private String location;
     private Date openDate;
-    private Integer active;
+    private Boolean active;
 
     public Store() {
     }
 
-    public Store(Integer id, String name, String city, String location, Date openDate, Integer active) {
+    public Store(Integer id, String name, String city, String location, Date openDate, Boolean active) {
         this.id = id;
         this.name = name;
         this.city = city;
@@ -75,11 +75,11 @@ public class Store {
         this.openDate = openDate;
     }
 
-    public Integer getActive() {
+    public Boolean getActive() {
         return this.active;
     }
 
-    public void setActive(Integer active) {
+    public void setActive(Boolean active) {
         this.active = active;
     }
 

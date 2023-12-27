@@ -34,7 +34,7 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
-    public List<Product> findByActive(Integer active, Pageable pageable) {
+    public List<Product> findByActive(Boolean active, Pageable pageable) {
         if (pageable == null) {
             return productRepository.findAll()
                 .stream().filter(p -> p.getActive() == active).toList();
