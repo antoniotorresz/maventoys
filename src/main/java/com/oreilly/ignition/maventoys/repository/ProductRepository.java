@@ -1,5 +1,7 @@
 package com.oreilly.ignition.maventoys.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,4 +17,5 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     void updatePriceAndCost(@Param("productId") Integer productId, @Param("price") Double price,
             @Param("cost") Double cost);
 
+    List<Product> findByIdIn(List<Integer> ids);
 }

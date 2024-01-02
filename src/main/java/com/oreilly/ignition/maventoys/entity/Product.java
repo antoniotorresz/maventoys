@@ -3,12 +3,14 @@ package com.oreilly.ignition.maventoys.entity;
 import java.util.Date;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -17,6 +19,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -35,14 +38,15 @@ public class Product {
     private Date creationDate;
     private Boolean active;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @JsonManagedReference
-    @ManyToMany(mappedBy = "products", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private Set<Sale> sales;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @OneToMany(mappedBy = "id.product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Invoice> invoices;
 
     public Product() {
     }
@@ -57,7 +61,6 @@ public class Product {
         this.active = active;
         this.category = category;
     }
-
 
     public Integer getId() {
         return this.id;
@@ -115,14 +118,6 @@ public class Product {
         this.category = category;
     }
 
-    public Set<Sale> getSales() {
-        return this.sales;
-    }
-
-    public void setSales(Set<Sale> sales) {
-        this.sales = sales;
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -167,11 +162,6 @@ public class Product {
                 return false;
         } else if (!category.equals(other.category))
             return false;
-        if (sales == null) {
-            if (other.sales != null)
-                return false;
-        } else if (!sales.equals(other.sales))
-            return false;
         return true;
     }
 
@@ -186,11 +176,7 @@ public class Product {
         result = prime * result + ((creationDate == null) ? 0 : creationDate.hashCode());
         result = prime * result + ((active == null) ? 0 : active.hashCode());
         result = prime * result + ((category == null) ? 0 : category.hashCode());
-        result = prime * result + ((sales == null) ? 0 : sales.hashCode());
         return result;
     }
-
-
-    
 
 }

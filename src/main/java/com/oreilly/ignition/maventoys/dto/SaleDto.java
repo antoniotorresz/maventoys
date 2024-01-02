@@ -1,31 +1,42 @@
 package com.oreilly.ignition.maventoys.dto;
 
-public class SaleDto {
-    private Integer productId;
-    private Integer totalSold;
+import java.util.ArrayList;
+import java.util.List;
 
-    public SaleDto() {
+public class SaleDTO {
+    private Integer employeeId;
+    private Integer storeId;
+    private List<ProductQuantity> productQuantity = new ArrayList<>();
+
+    public Integer getEmployeeId() {
+        return this.employeeId;
     }
 
-    public SaleDto(Integer productId, Integer totalSold) {
-        this.productId = productId;
-        this.totalSold = totalSold;
+    public void setEmployeeId(Integer employeeId) {
+        this.employeeId = employeeId;
     }
 
-    public Integer getProductId() {
-        return this.productId;
+    public Integer getStoreId() {
+        return this.storeId;
     }
 
-    public void setProductId(Integer productId) {
-        this.productId = productId;
+    public void setStoreId(Integer storeId) {
+        this.storeId = storeId;
     }
 
-    public Integer getTotalSold() {
-        return this.totalSold;
+    public List<ProductQuantity> getProductQuantity() {
+        return productQuantity;
     }
 
-    public void setTotalSold(Integer totalSold) {
-        this.totalSold = totalSold;
+    public void setProductQuantity(List<ProductQuantity> productQuantity) {
+        this.productQuantity = productQuantity;
     }
 
+    @Override
+    public String toString() {
+        return "SaleDTO [employeeId=" + employeeId + ", storeId=" + storeId + ", productQuantity=" + productQuantity.toString()
+                + "]";
+    }
+
+    
 }

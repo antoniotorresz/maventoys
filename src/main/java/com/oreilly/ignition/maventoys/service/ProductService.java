@@ -1,5 +1,8 @@
 package com.oreilly.ignition.maventoys.service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -7,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.oreilly.ignition.maventoys.entity.Category;
 import com.oreilly.ignition.maventoys.entity.Product;
 import com.oreilly.ignition.maventoys.repository.ProductRepository;
 
@@ -44,8 +48,9 @@ public class ProductService {
     }
 
     public List<Product> getBestSellers() {
-        return productRepository.findAll()
-                .stream().sorted((p1, p2) -> p2.getSales().size() - p1.getSales().size()).toList();
+        // return productRepository.findAll()
+        //         .stream().sorted((p1, p2) -> p2.getSales().size() - p1.getSales().size()).toList();
+       return Arrays.asList(null);
     }
 
     public List<Product> getBestSellers(List<Product> products) {
@@ -60,4 +65,7 @@ public class ProductService {
         productRepository.updatePriceAndCost(productId, price, cost);
     }
 
+    public List<Product> findByIds(List<Integer> ids) {
+        return productRepository.findByIdIn(ids);
+    }
 }
