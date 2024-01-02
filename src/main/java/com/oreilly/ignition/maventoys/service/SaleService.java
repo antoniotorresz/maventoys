@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.oreilly.ignition.maventoys.dto.SaleDTO;
+import com.oreilly.ignition.maventoys.dto.SaleDto;
 import com.oreilly.ignition.maventoys.entity.Invoice;
 import com.oreilly.ignition.maventoys.entity.Sale;
 import com.oreilly.ignition.maventoys.mapper.SaleMapper;

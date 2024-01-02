@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.oreilly.ignition.maventoys.dto.ProductQuantity;
-import com.oreilly.ignition.maventoys.dto.SaleDTO;
+import com.oreilly.ignition.maventoys.dto.SaleDto;
 import com.oreilly.ignition.maventoys.entity.Invoice;
 import com.oreilly.ignition.maventoys.entity.InvoiceId;
 import com.oreilly.ignition.maventoys.entity.Product;
@@ -52,7 +52,7 @@ public class SaleController {
 
     @CrossOrigin
     @PostMapping
-    public ResponseEntity<Object> save(@RequestBody SaleDTO saleDto) {
+    public ResponseEntity<Object> save(@RequestBody SaleDto saleDto) {
         Sale sale = new Sale();
         Set<Product> products = new HashSet<Product>();
         HashMap<Product, Integer> productQuantity = new HashMap<Product, Integer>();
