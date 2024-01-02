@@ -47,12 +47,6 @@ public class ProductService {
                 .stream().filter(p -> p.getActive() == active).toList();
     }
 
-    public List<Product> getBestSellers() {
-        // return productRepository.findAll()
-        //         .stream().sorted((p1, p2) -> p2.getSales().size() - p1.getSales().size()).toList();
-       return Arrays.asList(null);
-    }
-
     public List<Product> getBestSellers(List<Product> products) {
         for (Product product : products) {
             this.save(product);
