@@ -4,8 +4,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import com.oreilly.ignition.maventoys.dto.SaleDto;
-import com.oreilly.ignition.maventoys.entity.Sale;
+import com.oreilly.ignition.maventoys.model.dto.SaleDto;
+import com.oreilly.ignition.maventoys.model.entity.Sale;
 
 @Mapper(componentModel = "spring")
 public interface SaleMapper {

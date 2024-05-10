@@ -1,25 +1,10 @@
 package com.oreilly.ignition.maventoys.controller;
 
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
-
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,255 +19,201 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.oreilly.ignition.maventoys.entity.Category;
-import com.oreilly.ignition.maventoys.entity.Inventory;
-import com.oreilly.ignition.maventoys.entity.Product;
-import com.oreilly.ignition.maventoys.entity.Sale;
 import com.oreilly.ignition.maventoys.service.ProductService;
 import com.oreilly.ignition.maventoys.service.SaleService;
+import com.oreilly.ignition.maventoys.model.CustomApiResponse;
+import com.oreilly.ignition.maventoys.model.entity.Product;
 import com.oreilly.ignition.maventoys.service.CategoryService;
 import com.oreilly.ignition.maventoys.service.InventoryService;
 
+@CrossOrigin
 @RestController
-@RequestMapping("/products")
+@RequestMapping(value = "/products", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ProductController {
-    @Autowired
-    private ProductService productService;
-    @Autowired
-    private InventoryService inventoryService;
-    @Autowired
-    private SaleService saleService;
-    @Autowired
-    private CategoryService categoryService;
+    /**
+     * The service to handle the product operations.
+     */
+    private final ProductService productService;
+    /**
+     * The service to handle the inventory operations.
+     */
+    private final InventoryService inventoryService;
+    /**
+     * The service to handle the sale operations.
+     */
+    private final SaleService saleService;
+    /**
+     * The service to handle the category operations.
+     */
+    private final CategoryService categoryService;
 
+    /**
+     * Constructs a new ProductController with the specified services.
+     *
+     * @param productServiceParam   the ProductService to handle product operations
+     * @param inventoryServiceParam the InventoryService to handle inventory
+     *                              operations
+     * @param saleServiceParam      the SaleService to handle sale operations
+     * @param categoryServiceParam  the CategoryService to handle category
+     *                              operations
+     */
+    @Autowired
+    public ProductController(final ProductService productServiceParam, final InventoryService inventoryServiceParam,
+            final SaleService saleServiceParam, final CategoryService categoryServiceParam) {
+        this.productService = productServiceParam;
+        this.inventoryService = inventoryServiceParam;
+        this.saleService = saleServiceParam;
+        this.categoryService = categoryServiceParam;
+    }
+
+    /**
+     * Retrieves products based on the specified parameters.
+     *
+     * @param active   the active status of the products (optional)
+     * @param page     the page number for pagination (optional, default: 0)
+     * @param limit    the maximum number of products per page (optional, default:
+     *                 0)
+     * @param name     the name of the products (optional)
+     * @param category the category of the products (optional)
+     * @param stock    the minimum stock quantity of the products (optional,
+     *                 default: 0)
+     * @return an object containing the retrieved products
+     */
     @GetMapping
-    @CrossOrigin
-    public Object find(@RequestParam(value = "active", required = false) Boolean active,
-            @RequestParam(value = "page", required = false, defaultValue = "-1") Integer page,
-            @RequestParam(value = "limit", required = false, defaultValue = "-1") Integer limit,
-            @RequestParam(value = "name", required = false) String name,
-            @RequestParam(value = "category", required = false) String category) {
-        if (active == null) {
-            if (page > -1 && limit > 0) {
-                Pageable pageable = PageRequest.of(page, limit);
-                return productService.findAll(pageable);
-            }
-            return productService.findAll(null);
-        } else {
-            return productService.findByActive(active ? true : false, null);
-        }
+    public ResponseEntity<CustomApiResponse> find(
+            @RequestParam(value = "active", required = false) final Boolean active,
+            @RequestParam(value = "page", required = false, defaultValue = "0") final Integer page,
+            @RequestParam(value = "limit", required = false, defaultValue = "0") final Integer limit,
+            @RequestParam(value = "name", required = false) final String name,
+            @RequestParam(value = "category", required = false) final String category,
+            @RequestParam(value = "low", required = false, defaultValue = "0") final Integer stock) {
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(productService.find(page, limit, name, category, stock, active));
     }
 
-    // @GetMapping("/products")
-    // public Object find(@RequestParam(value = "name", required = false) String name,
-    //         @RequestParam(value = "category", required = false) String category,
-    //         @RequestParam(value = "active", required = false) Boolean active,
-    //         @RequestParam(value = "page", defaultValue = "0") int page,
-    //         @RequestParam(value = "limit", defaultValue = "10") int limit) {
-    //     Pageable pageable = PageRequest.of(page, limit);
-
-    //     if (active != null) {
-    //         return productService.findByActive(active ? 1 : 0, pageable);
-    //     } else if (name != null && category != null) {
-    //         return productService.findByNameAndCategory(name, category, pageable);
-    //     } else if (name != null) {
-    //         return productService.findByName(name, pageable);
-    //     } else if (category != null) {
-    //         return productService.findByCategory(category, pageable);
-    //     } else {
-    //         return productService.findAll(pageable);
-    //     }
-    // }
-
-    @GetMapping("/{productId}")
-    @CrossOrigin
-    public ResponseEntity<Product> findById(@PathVariable("productId") Integer productId) {
-        return productService.findById(productId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    /**
+     * Retrieves a product by its ID.
+     *
+     * @param productId the ID of the product to retrieve
+     * @return a ResponseEntity containing the product if found, or a not found
+     *         response if not found
+     */
+    @GetMapping(value = "/{productId}")
+    public ResponseEntity<CustomApiResponse> findById(@PathVariable("productId") final Integer productId) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(productService.findById(productId));
     }
 
+    /**
+     * Creates a new product.
+     *
+     * @param product the product to be created
+     * @return the created product
+     */
     @PostMapping
-    @CrossOrigin
-    public Product create(@RequestBody Product product) {
-        if (product != null) {
-            product.setCreationDate(new Date());
-            product.setActive(true);
-            return productService.save(product);
-        } else {
-            return null;
-        }
+    public ResponseEntity<CustomApiResponse> create(@RequestBody final Product product) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(productService.save(product));
     }
 
-    @DeleteMapping("/{productId}")
-    @CrossOrigin
-    public ResponseEntity<Product> deleteById(@PathVariable("productId") Integer productId) {
-        Optional<Product> productOptional = productService.findById(productId);
-        if (productOptional.isPresent()) {
-            // we are doing logical delete, so we are just setting the active flag to 0
-            Product product = productOptional.get();
-            product.setActive(false);
-            return ResponseEntity.ok(productService.save(product));
-        } else {
-            return ResponseEntity.status(404).build();
-        }
+    /**
+     * Deletes a product by its ID.
+     *
+     * @param productId the ID of the product to be deleted
+     * @return a ResponseEntity containing the deleted product if it exists, or a
+     *         404 status if it does not exist
+     */
+    @DeleteMapping(value = "/{productId}")
+    public ResponseEntity<CustomApiResponse> deleteById(@PathVariable("productId") final Integer productId) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(productService.deleteById(productId));
     }
 
-    @PutMapping("/{productId}")
-    @CrossOrigin
-    public Product update(@PathVariable("productId") Integer productId, @RequestBody Product product) {
-        Product productToUpdate = productService.findById(productId).orElse(null);
-        if (productToUpdate != null) {
-            productToUpdate.setName(product.getName());
-            productToUpdate.setCost(product.getCost());
-            productToUpdate.setPrice(product.getPrice());
-            productToUpdate.setCategory(product.getCategory());
-            return productService.save(productToUpdate);
-        } else {
-            return null;
-        }
+    /**
+     * Updates a product with the given ID.
+     *
+     * @param productId The ID of the product to update.
+     * @param product   The updated product information.
+     * @return The updated product.
+     */
+    @PutMapping(value = "/{productId}")
+    public ResponseEntity<CustomApiResponse> update(@PathVariable("productId") final Integer productId,
+            @RequestBody final Product product) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(productService.update(productId, product));
     }
 
-    @PatchMapping("/{productId}")
-    @CrossOrigin
-    public Product updatePriceCost(@PathVariable("productId") Integer productId, @RequestBody Product product) {
-        Product productToUpdate = productService.findById(productId).orElse(null);
-        if (productToUpdate != null) {
-            productToUpdate.setPrice(product.getPrice());
-            productToUpdate.setCost(product.getCost());
-            return productService.save(productToUpdate);
-        } else {
-            return null;
-        }
+    /**
+     * Updates the price and cost of a product.
+     *
+     * @param productId the ID of the product to update
+     * @param product   the updated product information
+     * @return the updated product
+     */
+    @PatchMapping(value = "/{productId}")
+    public ResponseEntity<CustomApiResponse> updatePriceCost(@PathVariable("productId") final Integer productId,
+            @RequestBody final Product product) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(productService.updatePriceAndCost(productId, product));
     }
 
-    @GetMapping("/{productId}/inventory")
-    @CrossOrigin
-    public ResponseEntity<HashMap<Object, Object>> getInventory(@PathVariable("productId") Integer productId) {
-        Optional<Product> productOptional = productService.findById(productId);
-        if (productOptional.isPresent()) {
-            Product product = productOptional.get();
-            List<Inventory> inventories = inventoryService.findByProductId(product.getId());
-            HashMap<Object, Object> inventoryPerProduct = new HashMap<>() {
-                {
-                    put("product", product);
-                    put("totalStock", inventories.stream().mapToInt(Inventory::getStockOnHand).sum());
-                    put("inventory", new ArrayList<>() {
-                        {
-                            for (Inventory inventory : inventories) {
-                                add(new HashMap<>() {
-                                    {
-                                        put("id", inventory.getId());
-                                        put("stockOnHand", inventory.getStockOnHand());
-                                    }
-                                });
-                            }
-                        }
-                    });
-                }
-            };
-            return ResponseEntity.ok(inventoryPerProduct);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    /**
+     * Retrieves the inventory information for a given product.
+     *
+     * @param productId the ID of the product
+     * @return a ResponseEntity containing the inventory information
+     */
+    @GetMapping(value = "/{productId}/inventory")
+    public ResponseEntity<Object> getInventory(@PathVariable("productId") final Integer productId) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(productService.findInventoriesByProductId(productId));
     }
 
-    @GetMapping("/{productId}/sales")
-    @CrossOrigin
-    public ResponseEntity<HashMap<Object, Object>> getSales(@PathVariable("productId") Integer productId) {
-        Optional<Product> productOptional = productService.findById(productId);
-        if (productOptional.isPresent()) {
-            Product product = productOptional.get();
-            List<Sale> sales = saleService.findByProductId(product.getId());
-            HashMap<Object, Object> inventoryPerProduct = new HashMap<>() {
-                {
-                    put("product", product);
-                    put("sales", sales);
-                }
-            };
-            return ResponseEntity.ok(inventoryPerProduct);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    /**
+     * Retrieves the sales information for a specific product.
+     *
+     * @param productId the ID of the product
+     * @return a ResponseEntity containing the sales information
+     */
+    @GetMapping(value = "/{productId}/sales")
+    public ResponseEntity<CustomApiResponse> getSales(@PathVariable("productId") final Integer productId) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(productService.findSalesByProductId(productId));
     }
 
-    @GetMapping("/best-sellers")
-    @CrossOrigin
-    public ResponseEntity<HashMap<Object, Object>> getBestSellers(
-            @RequestParam(value = "category", required = false) String category) {
+    /**
+     * Retrieves the best-selling products based on the specified category.
+     *
+     * @param category the category of products to filter by (optional)
+     * @return a ResponseEntity containing the best-selling products and their
+     *         quantities
+     */
+    @GetMapping(value = "/best-sellers")
+    public ResponseEntity<CustomApiResponse> getBestSellers(
+            @RequestParam(value = "category", required = false) final String category) {
         if (category == null) {
-            List<Object[]> topSold = saleService.findMostSoldProducts();
-            HashMap<Object, Object> bestSellers = new HashMap<>() {
-                {
-                    put("bestSellers", new ArrayList<>() {
-                        {
-                            for (Object[] productQuantity : topSold) {
-                                add(new HashMap<>() {
-                                    {
-                                        put("product", productService.findById((Integer) productQuantity[0]).get());
-                                        put("quantity", productQuantity[1]);
-                                    }
-                                });
-                            }
-                        }
-                    });
-                }
-            };
-            return ResponseEntity.ok(bestSellers);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(productService.findMostSoldProducts());
         } else {
-            Category categoryOptional = categoryService.findByName(category);
-            if (categoryOptional != null) {
-                List<Object[]> topSold = saleService.findMostSoldProductsByCategory(categoryOptional.getId());
-                HashMap<Object, Object> bestSellers = new HashMap<>() {
-                    {
-                        put("bestSellers", new ArrayList<>() {
-                            {
-                                for (Object[] productQuantity : topSold) {
-                                    add(new HashMap<>() {
-                                        {
-                                            put("product", productService.findById((Integer) productQuantity[0]).get());
-                                            put("quantity", productQuantity[1]);
-                                        }
-                                    });
-                                }
-                            }
-                        });
-                    }
-                };
-
-                return ResponseEntity.ok(bestSellers);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(productService.findMostSoldProductsByCategory(category));
         }
     }
 
-    @CrossOrigin
-    @PutMapping
-    public ResponseEntity<Object> bulkCostPriceUpdate(@RequestParam("csvFile") MultipartFile csvFile)
+    /**
+     * Updates the cost price of multiple products using a CSV file.
+     * @param csvFile the CSV file containing the product data
+     * @return a ResponseEntity object with the update status message
+     * @throws FileNotFoundException if the CSV file is not found
+     * @throws IOException           if an I/O error occurs while reading the CSV
+     *                               file
+     */
+    @PutMapping(value = "/bulk-update")
+    public ResponseEntity<Object> bulkCostPriceUpdate(@RequestParam("csvFile") final MultipartFile csvFile)
             throws FileNotFoundException, IOException {
-        LocalDateTime currentTime = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH_mm_ss");
-        String pathToSave = "src/main/resources/static/bulk_updates/product_bulk_" + currentTime.format(formatter)
-                + ".csv";
-        Files.write(Paths.get(pathToSave), csvFile.getBytes());
-        int count;
-        
-        try (FileReader fileReader = new FileReader(pathToSave);
-                CSVParser csvParser = CSVFormat.DEFAULT.withHeader().parse(fileReader)) {
-            List<CSVRecord> records = csvParser.getRecords();
-            count = records.size();
-            for (CSVRecord row : records) {
-                // Access each record's values using the header names
-                System.out.println("Updating product " + row.get("id") + " to price " + row.get("price") + " and cost "
-                        + row.get("cost"));
-                productService.updatePriceAndCost(Integer.parseInt(row.get("id")),
-                        Double.parseDouble(row.get("price")), Double.parseDouble(row.get("cost")));
-            }
-            System.out.println("Finished updating " + count + " products");
-            return ResponseEntity.ok(Collections.singletonMap("message", count + " products updated successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Error updating products"));
-        }
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(productService.bulkCostPriceUpdate(csvFile));
     }
+
 }

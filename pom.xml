@@ -98,7 +98,7 @@
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.3.0</version>
 		</dependency>
-
+		
 	</dependencies>
 
 	<build>
@@ -140,6 +140,28 @@
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>io.swagger.core.v3</groupId>
+				<artifactId>swagger-maven-plugin</artifactId>
+				<version>2.1.6</version>
+				<configuration>
+					<outputFileName>openapi</outputFileName>
+					<outputPath>${project.build.directory}</outputPath>
+					<outputFormat>YAML</outputFormat>
+					<resourcePackages>
+						<package>com.oreilly</package>
+					</resourcePackages>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>compile</phase>
+						<goals>
+							<goal>resolve</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

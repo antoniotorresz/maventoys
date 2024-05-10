@@ -1,31 +1,42 @@
 package com.oreilly.ignition.maventoys.service;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.oreilly.ignition.maventoys.entity.Inventory;
-
+import com.oreilly.ignition.maventoys.model.entity.Inventory;
 import com.oreilly.ignition.maventoys.repository.InventoryRepository;
+import com.oreilly.ignition.maventoys.repository.ProductRepository;
 
+/**
+ * This class represents a service for managing inventory.
+ */
 @Service
 public class InventoryService {
-    @Autowired
-    private InventoryRepository inventoryRepository;
+    /**
+     * The repository used for accessing inventory data.
+     */
+    private final InventoryRepository inventoryRepository;
 
-    public List<Inventory> find() {
-        return inventoryRepository.findAll();
+    /**
+     * Constructs a new InventoryService with the specified InventoryRepository and
+     * ProductRepository.
+     *
+     * @param newInventoryRepository the repository used for accessing inventory
+     *                               data
+     * @param productRepository      the repository used for accessing product data
+     */
+    public InventoryService(final InventoryRepository newInventoryRepository,
+            final ProductRepository productRepository) {
+        this.inventoryRepository = newInventoryRepository;
     }
 
-    public List<Inventory> findByProductId(Integer productId) {
-        return inventoryRepository.findByProductId(productId);
-        // return inventoryRepository.findAll()
-        //         .stream()
-        //         .filter(i -> i.getProduct().getId().equals(productId))
-        //         .collect(java.util.stream.Collectors.toSet()).stream().toList().stream()
-        //         .sorted(Comparator.comparing(Inventory::getId)).collect(Collectors.toList());
+    /**
+     * Retrieves all inventory items.
+     *
+     * @return a list of all inventory items
+     */
+    public List<Inventory> find() {
+        return inventoryRepository.findAll();
     }
 }
